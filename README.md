@@ -87,10 +87,10 @@ The installed reference is `hyperloglog 0.1.8`.
 
 | operation | mojo-hyperloglog | reference | speedup |
 | --- | ---: | ---: | ---: |
-| `add_bulk` 200k integers | 232.11 ms | 372.64 ms (upstream) | 1.61x |
-| `add_hashes` 2M uint64 | 10.47 ms | 1197.35 ms (equivalent NumPy update) | 114.38x |
-| `card` p=16, 1000 calls | 110.08 ms | 1957.21 ms (upstream) | 17.78x |
-| `update` p=16, 1000 merges | 100.72 ms | 25.51 ms (upstream) | 0.25x |
+| `add_bulk` 200k integers | 203.74 ms | 344.62 ms (upstream) | 1.69x |
+| `add_hashes` 2M uint64 | 10.84 ms | 1441.11 ms (equivalent NumPy update) | 132.99x |
+| `card` p=16, 1000 calls | 112.48 ms | 1808.59 ms (upstream) | 16.08x |
+| `update` p=16, 1000 merges | 11.05 ms | 23.60 ms (upstream) | 2.14x |
 
 `add_bulk` includes MessagePack serialization and SHA-1 in both implementations,
 so Python object hashing dominates that row. The bulk path reuses one MessagePack
@@ -99,11 +99,13 @@ update that Mojo replaces: it is a single O(n) pass, where the equivalent
 upstream NumPy algorithm groups registers through `unique`, sorting, and
 `maximum.reduceat`.
 
-There is no GPU or multithreaded path. These kernels are small or
-memory-access-heavy, and prehashed insertion performs random register updates.
-The benchmark also shows that the validated FFI merge path is slower than
-upstream NumPy on this machine; it is retained for a small, uniform Mojo kernel
-surface, not presented as a speedup.
+There is no GPU or multithreaded path. An HLL has at most 65,536 one-byte
+registers, so thread-launch overhead is not justified, while merge has only one
+comparison per two bytes read and prehashed insertion performs random register
+updates. None of these kernels approaches the roughly two-flops-per-byte
+arithmetic intensity needed to justify GPU transfer and launch overhead. The
+merge path validates buffer metadata once, then calls the existing Mojo
+byte-SIMD kernel directly without allocating or repeating full-array rank scans.
 
 Benchmark results depend on processor and system load. Run `pixi run bench` on
 the target machine rather than treating this table as a universal claim.

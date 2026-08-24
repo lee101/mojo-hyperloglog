@@ -129,6 +129,10 @@ def merge(registers: np.ndarray, other: np.ndarray) -> None:
     other = _register_array(other, writable=False, name="other")
     if registers.size != other.size:
         raise ValueError("register arrays must have equal lengths")
+    _merge_trusted(registers, other)
+
+
+def _merge_trusted(registers: np.ndarray, other: np.ndarray) -> None:
     lib().mhll_merge(addr(registers), addr(other), registers.size)
 
 

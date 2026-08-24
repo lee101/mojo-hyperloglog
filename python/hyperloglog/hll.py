@@ -10,7 +10,7 @@ from msgpack import Packer, packb
 
 from ._bias import load_bias_data
 from ._lib import add_hashes as _add_hashes
-from ._lib import merge as _merge
+from ._lib import _merge_trusted
 from ._lib import register_stats as _register_stats
 
 HLL_COUNTER_TYPE = np.int8
@@ -181,7 +181,7 @@ class HyperLogLog:
                 other_registers = _normalized_registers(item.M)
                 if other_registers.size != self.m:
                     raise ValueError("register length does not match precision")
-            _merge(self._registers(), other_registers)
+            _merge_trusted(self._registers(), other_registers)
 
     def __eq__(self, other):
         if not isinstance(other, HyperLogLog):

@@ -204,7 +204,11 @@ def test_update_matches_real_upstream(upstream_reference):
     right = HyperLogLog(0.02)
     left.add_bulk(range(0, 10000, 2))
     right.add_bulk(range(1, 10000, 2))
+    registers = left.M
+    address = left.M.ctypes.data
     left.update(right)
+    assert left.M is registers
+    assert left.M.ctypes.data == address
     expected = upstream_reference["merged"]
     assert left.M.tolist() == expected["M"]
     assert left.card() == pytest.approx(expected["card"], abs=1e-12)
