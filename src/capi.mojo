@@ -50,8 +50,8 @@ def merge_registers(registers: BPtr, other: BPtr, m: Int):
         registers.store(
             i,
             max(
-                registers.load[width=W](i),
-                other.load[width=W](i),
+                registers.unsafe_load[width=W](i),
+                other.unsafe_load[width=W](i),
             ),
         )
         i += W
